@@ -128,7 +128,7 @@ function capitalize(str) {
 async function jsonToProtoBuf(json) {
     return new Promise((resolve, reject) => {
         const schema = generateProtoSchema(json);
-        protobuf.load(schema, (err, root) => {
+        protobuf.loadFromString(schema, (err, root) => {
             if (err) {
 console.log('ERROR', "ProtoBuf schema loading error: " + err.message);
                 reject("ProtoBuf schema loading error: " + err.message);
