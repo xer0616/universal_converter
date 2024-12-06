@@ -31,8 +31,8 @@ document.getElementById("file-input").addEventListener("change", async (event) =
             addDownloadButton("download-csv", "data.csv", csvContent);
 
             // Convert to ProtoBuf and MessagePack
-            const protoBuf = jsonToProtoBuf(jsonData); // Ensure ProtoBuf library is set up
-            const messagePack = jsonToMessagePack(jsonData); // Ensure MessagePack library is set up
+            const protoBuf = await jsonToProtoBuf(jsonData); // Ensure ProtoBuf library is set up
+            const messagePack = await jsonToMessagePack(jsonData); // Ensure MessagePack library is set up
 
             addDownloadButton("download-protobuf", "data.proto", protoBuf);
             addDownloadButton("download-messagepack", "data.msgpack", messagePack);
@@ -64,11 +64,11 @@ function addDownloadButton(buttonId, filename, content) {
 }
 
 async function jsonToProtoBuf(json) {
-    return await protobufConverter(json);
+    return protobufConverter(json);
 }
 
 async function jsonToMessagePack(json) {
-    return await messagepackConverter(json);
+    return messagepackConverter(json);
 }
 
 function jsonToYaml(json) {
