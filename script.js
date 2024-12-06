@@ -72,10 +72,26 @@ async function jsonToMessagePack(json) {
 }
 
 function jsonToXml(json) {
-    const xml = `<root>${Object.entries(json).map(([key, value]) =>
-        `<${key}>${value}</${key}>`
-    ).join('')}</root>`;
-    return xml;
+    function convertToXml(obj, tagName = "root") {
+        let xml = "";
+        if (Array.isArray(obj)) {
+            // Handle arrays
+            obj.forEach((item) => {
+                xml += `<${tagName}>${convertToXml(item)}</${tagName}>`;
+            });
+        } else if (typeof obj === "object" && obj !== null) {
+            // Handle objects
+            for (const [key, value] of Object.entries(obj)) {
+                xml += `<${key}>${convertToXml(value, key)}</${key}>`;
+            }
+        } else {
+            // Handle primitive values
+            xml += obj;
+        }
+        return xml;
+    }
+
+    return `<root>${convertToXml(json)}</root>`;
 }
 
 function jsonToYaml(json) {
