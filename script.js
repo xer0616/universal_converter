@@ -125,16 +125,32 @@ function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-async function jsonToProtoBuf(json) {
+async function loadProtoSchema(schemaContent) {
     return new Promise((resolve, reject) => {
-        const schema = generateProtoSchema(json);
-        protobuf.loadFromString(schema, (err, root) => {
-            if (err) {
-console.log('ERROR', "ProtoBuf schema loading error: " + err.message);
-                reject("ProtoBuf schema loading error: " + err.message);
+        try {
+            // Parse the schema string to get the ProtoBuf root
+            const root = protobuf.parse(schemaContent).root;
+
+            // Check if the root contains the Data message
+            const Data = root.lookupType("Data");
+            if (!Data) {
+                reject("ProtoBuf schema does not contain 'Data' message.");
                 return;
             }
 
+            // Successfully loaded the schema
+            resolve(root);
+        } catch (err) {
+            console.error("ProtoBuf schema loading error: " + err.message);
+            reject("ProtoBuf schema loading error: " + err.message);
+        }
+    });
+}
+
+async function jsonToProtoBuf(json) {
+    const schemaContent = generateProtoSchema(json);
+    return loadProtoSchema(schemaContent)
+        .then(root => {
             // Get the Data message type from the schema
             const Data = root.lookupType("Data");
 
@@ -146,6 +162,9 @@ console.log('message', message);
 
 console.log('buffer', buffer);
             resolve(buffer); // Return the buffer as ProtoBuf binary data
+        })
+        .catch(error => {
+            console.error("Error loading ProtoBuf schema:", error);
         });
     });
 }
