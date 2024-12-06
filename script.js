@@ -5,7 +5,7 @@ document.getElementById("file-input").addEventListener("change", async (event) =
             const content = await file.text();
             document.getElementById("file-content").textContent = content;
 
-            // Parse JSON and check for errors
+            // Parse JSON
             let jsonData;
             try {
                 jsonData = JSON.parse(content);
@@ -18,7 +18,7 @@ document.getElementById("file-input").addEventListener("change", async (event) =
             // Convert to other formats
             const xmlContent = jsonToXml(jsonData);
             const yamlContent = jsonToYaml(jsonData);
-            const csvContent = jsonToCsv(jsonData);
+            const csvContent = Array.isArray(jsonData) ? jsonToCsv(jsonData) : "JSON must be an array for CSV conversion.";
 
             // Update boxes
             document.getElementById("xml-content").textContent = xmlContent;
@@ -31,8 +31,8 @@ document.getElementById("file-input").addEventListener("change", async (event) =
             addDownloadButton("download-csv", "data.csv", csvContent);
 
             // Convert to ProtoBuf and MessagePack
-            const protoBuf = jsonToProtoBuf(jsonData);
-            const messagePack = jsonToMessagePack(jsonData);
+            const protoBuf = jsonToProtoBuf(jsonData); // Ensure ProtoBuf library is set up
+            const messagePack = jsonToMessagePack(jsonData); // Ensure MessagePack library is set up
 
             addDownloadButton("download-protobuf", "data.proto", protoBuf);
             addDownloadButton("download-messagepack", "data.msgpack", messagePack);
@@ -63,31 +63,30 @@ function addDownloadButton(buttonId, filename, content) {
     };
 }
 
-function jsonToXml(json) {
-    let xml = `<root>`;
-    for (const key in json) {
-        xml += `<${key}>${json[key]}</${key}>`;
-    }
-    xml += `</root>`;
-    return xml;
-}
-
-function jsonToYaml(json) {
-    return Object.entries(json)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join("\n");
-}
-
-function jsonToCsv(json) {
-    const keys = Object.keys(json);
-    const values = Object.values(json);
-    return `${keys.join(",")}\n${values.join(",")}`;
-}
-
 async function jsonToProtoBuf(json) {
     return await protobufConverter(json);
 }
 
 async function jsonToMessagePack(json) {
     return await messagepackConverter(json);
+}
+
+function jsonToXml(json) {
+    const xml = `<root>${Object.entries(json).map(([key, value]) =>
+        `<${key}>${value}</${key}>`
+    ).join('')}</root>`;
+    return xml;
+}
+
+function jsonToYaml(json) {
+    return jsyaml.dump(json); // Requires js-yaml library
+}
+
+function jsonToCsv(json) {
+    const keys = Object.keys(json[0]); // Assumes an array of objects
+    const csvRows = [
+        keys.join(','), // Header row
+        ...json.map(row => keys.map(key => row[key]).join(',')) // Data rows
+    ];
+    return csvRows.join('\n');
 }
