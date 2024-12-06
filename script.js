@@ -214,10 +214,9 @@ async function jsonToProtoBuf(json) {
 
             // Create a new message
             const validData = preprocessJsonToMatchSchema(json, Data);
-
-console.log('Message ---', validData);
+console.log('ValidData ---', validData);
             // Create a new message
-            const message = Data.create(validData);
+            const message = Data.create(json);
 console.log('Message ---',message);
             const buffer = Data.encode(message).finish(); // Encode the message to a buffer
 
