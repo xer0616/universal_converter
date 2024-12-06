@@ -149,6 +149,7 @@ async function loadProtoSchema(schemaContent) {
 
 async function jsonToProtoBuf(json) {
     const schemaContent = generateProtoSchema(json);
+console.log('schema', schemaContent);
     return loadProtoSchema(schemaContent)
         .then(root => {
             // Get the Data message type from the schema
