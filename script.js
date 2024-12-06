@@ -25,11 +25,13 @@ document.getElementById("file-input").addEventListener("change", async (event) =
             }
 
             // Convert to other formats
+            const jsonContent = jsonData;
             const xmlContent = jsonToXml(jsonData);
             const yamlContent = jsonToYaml(jsonData);
             const csvContent = Array.isArray(jsonData) ? jsonToCsv(jsonData) : "JSON must be an array for CSV conversion.";
 
             // Update boxes
+            document.getElementById("json-content").textContent = jsonContent;
             document.getElementById("xml-content").textContent = xmlContent;
             document.getElementById("yaml-content").textContent = yamlContent;
             document.getElementById("csv-content").textContent = csvContent;
@@ -82,7 +84,8 @@ function generateProtoSchema(jsonData) {
     function analyzeObject(obj, parentKey = "") {
         if (Array.isArray(obj)) {
             // Handle arrays of objects (use repeated for arrays)
-            obj.forEach(item => analyzeObject(item, parentKey));
+            protoSchema += `  repeated Data ${parentKey} = ${fieldCount++};\n`;  // Add repeated field for array
+            obj.forEach(item => analyzeObject(item, `${parentKey}_item`));  // Recursively process each item in the array
         } else if (typeof obj === "object" && obj !== null) {
             // Handle objects (nested messages)
             for (const [key, value] of Object.entries(obj)) {
