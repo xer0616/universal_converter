@@ -1,4 +1,3 @@
-import protobuf from 'protobufjs'
 async function protobufConverter(json) {
     return new Promise((resolve, reject) => {
         protobuf.load(schema, (err, root) => {
