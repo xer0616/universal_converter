@@ -76,6 +76,7 @@ function addDownloadButton(buttonId, filename, content) {
 function generateProtoSchema(jsonData) {
     let protoSchema = "syntax = \"proto3\";\n\nmessage Data {\n";
     let fieldCount = 1;
+    let fieldNames = new Set(); // To track field names and avoid duplicates
 
     // Function to recursively analyze the data
     function analyzeObject(obj, parentKey = "") {
@@ -87,14 +88,22 @@ function generateProtoSchema(jsonData) {
             for (const [key, value] of Object.entries(obj)) {
                 const fieldType = getProtoFieldType(value);
                 const fieldName = parentKey ? `${parentKey}_${key}` : key;  // Add parent key for nested structures
-                protoSchema += `  ${fieldType} ${fieldName} = ${fieldCount++};\n`;
+
+                if (!fieldNames.has(fieldName)) { // Avoid duplicates
+                    protoSchema += `  ${fieldType} ${fieldName} = ${fieldCount++};\n`;
+                    fieldNames.add(fieldName); // Mark the field name as used
+                }
                 analyzeObject(value, fieldName);  // Recursively process nested objects
             }
         } else {
             // Handle primitives
             const fieldType = getProtoFieldType(obj);
             const fieldName = parentKey || "primitiveField"; // Use a default name for primitives
-            protoSchema += `  ${fieldType} ${fieldName} = ${fieldCount++};\n`;
+
+            if (!fieldNames.has(fieldName)) { // Avoid duplicates
+                protoSchema += `  ${fieldType} ${fieldName} = ${fieldCount++};\n`;
+                fieldNames.add(fieldName); // Mark the field name as used
+            }
         }
     }
 
