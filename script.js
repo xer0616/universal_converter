@@ -25,7 +25,7 @@ document.getElementById("file-input").addEventListener("change", async (event) =
             }
 
             // Convert to other formats
-            const jsonContent = jsonData;
+            const jsonContent = JSON.stingify(jsonData, null, 2);
             const xmlContent = jsonToXml(jsonData);
             const yamlContent = jsonToYaml(jsonData);
             const csvContent = Array.isArray(jsonData) ? jsonToCsv(jsonData) : "JSON must be an array for CSV conversion.";
