@@ -127,11 +127,10 @@ function capitalize(str) {
 
 async function jsonToProtoBuf(json) {
     return new Promise((resolve, reject) => {
-console.log('json', json)
         const schema = generateProtoSchema(json);
-console.log('schema', schema)
         protobuf.load(schema, (err, root) => {
             if (err) {
+console.log('ERROR', "ProtoBuf schema loading error: " + err.message);
                 reject("ProtoBuf schema loading error: " + err.message);
                 return;
             }
@@ -139,10 +138,13 @@ console.log('schema', schema)
             // Get the Data message type from the schema
             const Data = root.lookupType("Data");
 
+console.log('Data', Data);
             // Create a new message
             const message = Data.create(json); // Assume json is compatible with the schema
+console.log('message', message);
             const buffer = Data.encode(message).finish(); // Encode the message to a buffer
 
+console.log('buffer', buffer);
             resolve(buffer); // Return the buffer as ProtoBuf binary data
         });
     });
