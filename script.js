@@ -3,12 +3,21 @@ document.getElementById("file-input").addEventListener("change", async (event) =
     if (file) {
         try {
             const content = await file.text();
+            const fileType = file.name.split('.').pop().toLowerCase();
             document.getElementById("file-content").textContent = content;
 
             // Parse JSON
             let jsonData;
             try {
-                jsonData = JSON.parse(content);
+                if (fileType === 'json') {
+                    jsonData = JSON.parse(content);
+                } else if (fileType === 'csv') {
+                    jsonData = csvToJson(content); // Convert CSV to JSON
+                } else if (fileType === 'xml') {
+                    jsonData = xmlToJson(content); // Convert XML to JSON
+                } else {
+                    throw new Error("Unsupported file type.");
+                }
                 updateStatus("File loaded and parsed successfully.");
             } catch (error) {
                 updateStatus("Invalid JSON format. Please upload a valid JSON file.", true);
@@ -63,8 +72,62 @@ function addDownloadButton(buttonId, filename, content) {
     };
 }
 
+// Helper function to generate ProtoBuf schema from JSON data
+function generateProtoSchema(jsonData) {
+    let protoSchema = "syntax = \"proto3\";\n\nmessage Data {\n";
+    let fieldCount = 1;
+
+    // Function to recursively analyze the data
+    function analyzeObject(obj) {
+        if (Array.isArray(obj)) {
+            // Handle arrays
+            obj.forEach(item => analyzeObject(item));
+        } else if (typeof obj === "object" && obj !== null) {
+            // Handle objects (nested messages)
+            for (const [key, value] of Object.entries(obj)) {
+                const fieldType = getProtoFieldType(value);
+                protoSchema += `  ${fieldType} ${key} = ${fieldCount++};\n`;
+            }
+        } else {
+            // Handle primitives
+            const fieldType = getProtoFieldType(obj);
+            protoSchema += `  ${fieldType} ${key} = ${fieldCount++};\n`;
+        }
+    }
+
+    // Analyze the root object
+    analyzeObject(jsonData);
+
+    protoSchema += "}\n";
+    return protoSchema;
+}
+
+// Helper function to determine the ProtoBuf field type based on data type
+function getProtoFieldType(value) {
+    if (Array.isArray(value)) {
+        return "repeated string"; // Assume array of strings for simplicity
+    }
+    switch (typeof value) {
+        case "string":
+            return "string";
+        case "number":
+            return Number.isInteger(value) ? "int32" : "double";
+        case "boolean":
+            return "bool";
+        case "object":
+            return "message"; // For nested objects, will need to define new message types
+        default:
+            return "string"; // Default to string for unknown types
+    }
+}
+
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 async function jsonToProtoBuf(json) {
     return new Promise((resolve, reject) => {
+        const schema = generateProtoSchema(json);
         protobuf.load(schema, (err, root) => {
             if (err) {
                 reject("ProtoBuf schema loading error: " + err.message);
@@ -147,5 +210,64 @@ function formatXml(xml) {
     });
 
     return formatted.trim(); // Remove trailing whitespace
+}
+
+function csvToJson(csv) {
+    const lines = csv.split("\n");
+    const keys = lines[0].split(",");
+    const result = [];
+
+    for (let i = 1; i < lines.length; i++) {
+        const obj = {};
+        const values = lines[i].split(",");
+        keys.forEach((key, index) => {
+            obj[key] = values[index];
+        });
+        result.push(obj);
+    }
+    return result;
+}
+
+// Helper function to convert XML to JSON
+function xmlToJson(xml) {
+    // Simple XML to JSON conversion (requires xml2js or similar library)
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xml, "application/xml");
+    const json = xmlToJsonRecursive(xmlDoc.documentElement);
+    return json;
+}
+
+function xmlToJsonRecursive(node) {
+    const obj = {};
+    if (node.nodeType === 1) {
+        // Element node
+        if (node.attributes.length > 0) {
+            obj["attributes"] = {};
+            for (let i = 0; i < node.attributes.length; i++) {
+                const attribute = node.attributes.item(i);
+                obj["attributes"][attribute.nodeName] = attribute.nodeValue;
+            }
+        }
+    } else if (node.nodeType === 3) {
+        // Text node
+        obj["value"] = node.nodeValue;
+    }
+
+    if (node.hasChildNodes()) {
+        for (let i = 0; i < node.childNodes.length; i++) {
+            const child = node.childNodes[i];
+            const nodeName = child.nodeName;
+            if (obj[nodeName] === undefined) {
+                obj[nodeName] = xmlToJsonRecursive(child);
+            } else {
+                if (Array.isArray(obj[nodeName])) {
+                    obj[nodeName].push(xmlToJsonRecursive(child));
+                } else {
+                    obj[nodeName] = [obj[nodeName], xmlToJsonRecursive(child)];
+                }
+            }
+        }
+    }
+    return obj;
 }
 
