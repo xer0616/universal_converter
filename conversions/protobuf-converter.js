@@ -18,3 +18,5 @@ async function protobufConverter(json) {
         });
     });
 }
+// Export the protobufConverter function
+export { protobufConverter };
