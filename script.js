@@ -1,4 +1,3 @@
-import { protobufConverter } from './conversions/protobuf-converter.js';
 document.getElementById("file-input").addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -65,7 +64,23 @@ function addDownloadButton(buttonId, filename, content) {
 }
 
 async function jsonToProtoBuf(json) {
-    return protobufConverter(json);
+    return new Promise((resolve, reject) => {
+        protobuf.load(schema, (err, root) => {
+            if (err) {
+                reject("ProtoBuf schema loading error: " + err.message);
+                return;
+            }
+
+            // Get the Data message type from the schema
+            const Data = root.lookupType("Data");
+
+            // Create a new message
+            const message = Data.create(json); // Assume json is compatible with the schema
+            const buffer = Data.encode(message).finish(); // Encode the message to a buffer
+
+            resolve(buffer); // Return the buffer as ProtoBuf binary data
+        });
+    });
 }
 
 async function jsonToMessagePack(json) {
