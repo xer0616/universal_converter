@@ -237,13 +237,47 @@ function jsonToYaml(json) {
 }
 
 function jsonToCsv(json) {
-    const keys = Object.keys(json[0]); // Assumes an array of objects
+    if (!Array.isArray(json) || json.length === 0) {
+        throw new Error("Input must be a non-empty array of objects.");
+    }
+
+    // Flatten the JSON to handle nested arrays and objects
+    const flattenObject = (obj, parentKey = "") => {
+        return Object.entries(obj).reduce((acc, [key, value]) => {
+            const newKey = parentKey ? `${parentKey}_${key}` : key;
+            if (Array.isArray(value)) {
+                // Flatten arrays into indexed columns
+                value.forEach((item, index) => {
+                    acc[`${newKey}_${index + 1}`] = item;
+                });
+            } else if (typeof value === "object" && value !== null) {
+                // Recursively flatten nested objects
+                Object.assign(acc, flattenObject(value, newKey));
+            } else {
+                acc[newKey] = value;
+            }
+            return acc;
+        }, {});
+    };
+
+    // Flatten all objects and gather unique keys
+    const flattenedData = json.map(item => flattenObject(item));
+    const headers = Array.from(
+        flattenedData.reduce((keys, obj) => {
+            Object.keys(obj).forEach(key => keys.add(key));
+            return keys;
+        }, new Set())
+    );
+
+    // Generate CSV rows
     const csvRows = [
-        keys.join(','), // Header row
-        ...json.map(row => keys.map(key => row[key]).join(',')) // Data rows
+        headers.join(","), // Header row
+        ...flattenedData.map(row => headers.map(header => row[header] || "").join(",")) // Data rows
     ];
-    return csvRows.join('\n');
+
+    return csvRows.join("\n");
 }
+
 
 function jsonToXml(json) {
     function convertToXml(obj, tagName = "root") {
