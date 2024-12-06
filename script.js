@@ -85,7 +85,8 @@ function generateProtoSchema(jsonData) {
     function analyzeObject(obj, parentKey = "") {
         if (Array.isArray(obj)) {
             // Handle arrays of objects (use repeated for arrays)
-            protoSchema += `  repeated Data ${parentKey} = ${fieldCount++};\n`;  // Add repeated field for array
+            const arrayFieldName = `${parentKey}_items`; // Ensure the array field name is unique
+            protoSchema += `  repeated ${getProtoFieldType(obj[0])} ${arrayFieldName} = ${fieldCount++};\n`;  // Add repeated field for array
             obj.forEach(item => analyzeObject(item, `${parentKey}_item`));  // Recursively process each item in the array
         } else if (typeof obj === "object" && obj !== null) {
             // Handle objects (nested messages)
@@ -93,7 +94,8 @@ function generateProtoSchema(jsonData) {
                 const fieldType = getProtoFieldType(value);
                 const fieldName = parentKey ? `${parentKey}_${key}` : key;  // Add parent key for nested structures
 
-                if (!fieldNames.has(fieldName)) { // Avoid duplicates
+                // Ensure unique field names
+                if (!fieldNames.has(fieldName)) {
                     protoSchema += `  ${fieldType} ${fieldName} = ${fieldCount++};\n`;
                     fieldNames.add(fieldName); // Mark the field name as used
                 }
@@ -104,7 +106,8 @@ function generateProtoSchema(jsonData) {
             const fieldType = getProtoFieldType(obj);
             const fieldName = parentKey || "primitiveField"; // Use a default name for primitives
 
-            if (!fieldNames.has(fieldName)) { // Avoid duplicates
+            // Ensure unique field names
+            if (!fieldNames.has(fieldName)) {
                 protoSchema += `  ${fieldType} ${fieldName} = ${fieldCount++};\n`;
                 fieldNames.add(fieldName); // Mark the field name as used
             }
@@ -123,23 +126,20 @@ function generateProtoSchema(jsonData) {
     return protoSchema;
 }
 
-// Helper function to map JavaScript types to ProtoBuf types
+// Function to determine ProtoBuf field type based on the value's type
 function getProtoFieldType(value) {
     if (Array.isArray(value)) {
-        return "repeated string";  // Assuming array items are strings for simplicity, you may adjust this
+        return "string"; // Simplified for demonstration; refine based on array contents
+    } else if (typeof value === "string") {
+        return "string";
+    } else if (typeof value === "number") {
+        return "float";
+    } else if (typeof value === "boolean") {
+        return "bool";
+    } else if (typeof value === "object" && value !== null) {
+        return "Data";  // This will assume that objects are of type `Data`
     }
-    switch (typeof value) {
-        case "number":
-            return Number.isInteger(value) ? "int32" : "float"; // Handle integers and floats
-        case "string":
-            return "string";
-        case "boolean":
-            return "bool";
-        case "object":
-            return "string"; // For now, treat objects as strings, adjust if necessary
-        default:
-            return "string";  // Default to string for unknown types
-    }
+    return "string";  // Default fallback type
 }
 
 
