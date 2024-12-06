@@ -37,6 +37,7 @@ document.getElementById("file-input").addEventListener("change", async (event) =
             document.getElementById("csv-content").textContent = csvContent;
 
             // Add download buttons
+            addDownloadButton("download-json", "data.json", jsonContent);
             addDownloadButton("download-xml", "data.xml", xmlContent);
             addDownloadButton("download-yaml", "data.yaml", yamlContent);
             addDownloadButton("download-csv", "data.csv", csvContent);
