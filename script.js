@@ -78,20 +78,23 @@ function generateProtoSchema(jsonData) {
     let fieldCount = 1;
 
     // Function to recursively analyze the data
-    function analyzeObject(obj) {
+    function analyzeObject(obj, parentKey = "") {
         if (Array.isArray(obj)) {
             // Handle arrays
-            obj.forEach(item => analyzeObject(item));
+            obj.forEach(item => analyzeObject(item, parentKey));
         } else if (typeof obj === "object" && obj !== null) {
             // Handle objects (nested messages)
             for (const [key, value] of Object.entries(obj)) {
                 const fieldType = getProtoFieldType(value);
-                protoSchema += `  ${fieldType} ${key} = ${fieldCount++};\n`;
+                const fieldName = parentKey ? `${parentKey}_${key}` : key;  // Add parent key for nested structures
+                protoSchema += `  ${fieldType} ${fieldName} = ${fieldCount++};\n`;
+                analyzeObject(value, fieldName);  // Recursively process nested objects
             }
         } else {
             // Handle primitives
             const fieldType = getProtoFieldType(obj);
-            protoSchema += `  ${fieldType} ${key} = ${fieldCount++};\n`;
+            const fieldName = parentKey || "primitiveField"; // Use a default name for primitives
+            protoSchema += `  ${fieldType} ${fieldName} = ${fieldCount++};\n`;
         }
     }
 
@@ -102,22 +105,22 @@ function generateProtoSchema(jsonData) {
     return protoSchema;
 }
 
-// Helper function to determine the ProtoBuf field type based on data type
+// Helper function to map JavaScript types to ProtoBuf types
 function getProtoFieldType(value) {
     if (Array.isArray(value)) {
-        return "repeated string"; // Assume array of strings for simplicity
+        return "repeated string";  // Assuming array items are strings for simplicity, you may adjust this
     }
     switch (typeof value) {
+        case "number":
+            return Number.isInteger(value) ? "int32" : "float"; // Handle integers and floats
         case "string":
             return "string";
-        case "number":
-            return Number.isInteger(value) ? "int32" : "double";
         case "boolean":
             return "bool";
         case "object":
-            return "message"; // For nested objects, will need to define new message types
+            return "string"; // For now, treat objects as strings, adjust if necessary
         default:
-            return "string"; // Default to string for unknown types
+            return "string";  // Default to string for unknown types
     }
 }
 
