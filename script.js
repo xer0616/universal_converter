@@ -117,6 +117,7 @@ function generateProtoSchema(jsonData) {
     // Analyze the root object or array of objects
     if (Array.isArray(jsonData)) {
         protoSchema += "  repeated Data data = 1;\n"; // Wrap the array of objects in a repeated field
+        fieldCount = 2;
         jsonData.forEach(item => analyzeObject(item, "data"));
     } else {
         analyzeObject(jsonData);
