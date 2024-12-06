@@ -80,7 +80,7 @@ function generateProtoSchema(jsonData) {
     // Function to recursively analyze the data
     function analyzeObject(obj, parentKey = "") {
         if (Array.isArray(obj)) {
-            // Handle arrays
+            // Handle arrays of objects (use repeated for arrays)
             obj.forEach(item => analyzeObject(item, parentKey));
         } else if (typeof obj === "object" && obj !== null) {
             // Handle objects (nested messages)
@@ -98,8 +98,13 @@ function generateProtoSchema(jsonData) {
         }
     }
 
-    // Analyze the root object
-    analyzeObject(jsonData);
+    // Analyze the root object or array of objects
+    if (Array.isArray(jsonData)) {
+        protoSchema += "  repeated Data data = 1;\n"; // Wrap the array of objects in a repeated field
+        jsonData.forEach(item => analyzeObject(item, "data"));
+    } else {
+        analyzeObject(jsonData);
+    }
 
     protoSchema += "}\n";
     return protoSchema;
@@ -123,6 +128,7 @@ function getProtoFieldType(value) {
             return "string";  // Default to string for unknown types
     }
 }
+
 
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
