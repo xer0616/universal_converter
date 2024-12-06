@@ -80,14 +80,18 @@ function generateProtoSchema(jsonData) {
     let protoSchema = "syntax = \"proto3\";\n\nmessage Data {\n";
     let fieldCount = 1;
     let fieldNames = new Set(); // To track field names and avoid duplicates
+    let repeatNames = new Set(); // To track repeat names and avoid duplicates
 
     // Function to recursively analyze the data
     function analyzeObject(obj, parentKey = "") {
         if (Array.isArray(obj)) {
             // Handle arrays of objects (use repeated for arrays)
             const arrayFieldName = `${parentKey}_items`; // Ensure the array field name is unique
-            protoSchema += `  repeated ${getProtoFieldType(obj[0])} ${arrayFieldName} = ${fieldCount++};\n`;  // Add repeated field for array
-            obj.forEach((item, index) => analyzeObject(item, `${parentKey}_item_${index}`));  // Recursively process each item in the array
+            if(!repeatNames.has(arrayFieldName) {
+                protoSchema += `  repeated ${getProtoFieldType(obj[0])} ${arrayFieldName} = ${fieldCount++};\n`;  // Add repeated field for array
+                obj.forEach((item, index) => analyzeObject(item, `${parentKey}_item_${index}`));  // Recursively process each item in the array
+                fieldNames.add(arrayFieldName); // Mark the repeat name as used
+            }
         } else if (typeof obj === "object" && obj !== null) {
             // Handle objects (nested messages)
             for (const [key, value] of Object.entries(obj)) {
