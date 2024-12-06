@@ -175,6 +175,34 @@ async function loadProtoSchema(schemaContent) {
     });
 }
 
+function preprocessJsonToMatchSchema(json, messageType) {
+    const fields = messageType.fieldsArray.reduce((map, field) => {
+        map[field.name] = field;
+        return map;
+    }, {});
+
+    if (Array.isArray(json)) {
+        return json.map(item => preprocessJsonToMatchSchema(item, messageType));
+    } else if (typeof json === "object" && json !== null) {
+        const result = {};
+        for (const [key, value] of Object.entries(json)) {
+            if (fields[key]) {
+                if (fields[key].repeated && !Array.isArray(value)) {
+                    // Convert non-array values to arrays for repeated fields
+                    result[key] = [value];
+                } else if (fields[key].type === "message" && typeof value === "object") {
+                    // Recursively process nested messages
+                    result[key] = preprocessJsonToMatchSchema(value, fields[key].resolvedType);
+                } else {
+                    result[key] = value;
+                }
+            }
+        }
+        return result;
+    }
+    return json; // Return primitives as-is
+}
+
 async function jsonToProtoBuf(json) {
     const schemaContent = generateProtoSchema(json);
     console.log('schema', schemaContent);
@@ -185,7 +213,11 @@ async function jsonToProtoBuf(json) {
             const Data = root.lookupType("Data");
 
             // Create a new message
-            const message = Data.create(json); // Assume json is compatible with the schema
+            const validData = preprocessJsonToMatchSchema(json, Data);
+
+console.log('Message ---', validData);
+            // Create a new message
+            const message = Data.create(validData);
 console.log('Message ---',message);
             const buffer = Data.encode(message).finish(); // Encode the message to a buffer
 
