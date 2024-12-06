@@ -71,6 +71,19 @@ async function jsonToMessagePack(json) {
     return await messagepackConverter(json);
 }
 
+function jsonToYaml(json) {
+    return jsyaml.dump(json); // Requires js-yaml library
+}
+
+function jsonToCsv(json) {
+    const keys = Object.keys(json[0]); // Assumes an array of objects
+    const csvRows = [
+        keys.join(','), // Header row
+        ...json.map(row => keys.map(key => row[key]).join(',')) // Data rows
+    ];
+    return csvRows.join('\n');
+}
+
 function jsonToXml(json) {
     function convertToXml(obj, tagName = "root") {
         let xml = "";
@@ -91,18 +104,32 @@ function jsonToXml(json) {
         return xml;
     }
 
-    return `<root>${convertToXml(json)}</root>`;
+    const rawXml = `<root>${convertToXml(json)}</root>`;
+    return formatXml(rawXml); // Call the formatting function
 }
 
-function jsonToYaml(json) {
-    return jsyaml.dump(json); // Requires js-yaml library
+function formatXml(xml) {
+    const PADDING = "  "; // Define the indentation
+    const lines = xml
+        .replace(/>\s*</g, "><") // Remove existing whitespace between tags
+        .replace(/</g, "\n<") // Insert newlines before tags
+        .split("\n"); // Split into lines for processing
+
+    let formatted = "";
+    let indentLevel = 0;
+
+    lines.forEach((line) => {
+        if (line.startsWith("</")) {
+            // Closing tag decreases indentation
+            indentLevel--;
+        }
+        formatted += PADDING.repeat(indentLevel) + line.trim() + "\n";
+        if (line.startsWith("<") && !line.startsWith("</") && !line.endsWith("/>")) {
+            // Opening tag increases indentation
+            indentLevel++;
+        }
+    });
+
+    return formatted.trim(); // Remove trailing whitespace
 }
 
-function jsonToCsv(json) {
-    const keys = Object.keys(json[0]); // Assumes an array of objects
-    const csvRows = [
-        keys.join(','), // Header row
-        ...json.map(row => keys.map(key => row[key]).join(',')) // Data rows
-    ];
-    return csvRows.join('\n');
-}
