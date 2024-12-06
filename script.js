@@ -87,7 +87,7 @@ function generateProtoSchema(jsonData) {
         if (Array.isArray(obj)) {
             // Handle arrays of objects (use repeated for arrays)
             const arrayFieldName = `${parentKey}_items`; // Ensure the array field name is unique
-            if(!repeatNames.has(arrayFieldName) {
+            if(!repeatNames.has(arrayFieldName)) {
                 protoSchema += `  repeated ${getProtoFieldType(obj[0])} ${arrayFieldName} = ${fieldCount++};\n`;  // Add repeated field for array
                 obj.forEach((item, index) => analyzeObject(item, `${parentKey}_item_${index}`));  // Recursively process each item in the array
                 fieldNames.add(arrayFieldName); // Mark the repeat name as used
