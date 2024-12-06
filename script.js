@@ -90,7 +90,7 @@ function generateProtoSchema(jsonData) {
             if(!repeatNames.has(arrayFieldName)) {
                 protoSchema += `  repeated ${getProtoFieldType(obj[0])} ${arrayFieldName} = ${fieldCount++};\n`;  // Add repeated field for array
                 obj.forEach((item, index) => analyzeObject(item, `${parentKey}_item_${index}`));  // Recursively process each item in the array
-                fieldNames.add(arrayFieldName); // Mark the repeat name as used
+                repeatNames.add(arrayFieldName); // Mark the repeat name as used
             }
         } else if (typeof obj === "object" && obj !== null) {
             // Handle objects (nested messages)
