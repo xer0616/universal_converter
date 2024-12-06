@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Data Format Converter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Data Format Converter</h1>
+        <input type="file" id="file-input" accept=".json" />
+        <div id="output">
+            <div class="box">
+                <h2>Original File</h2>
+                <pre id="file-content"></pre>
+            </div>
+            <div class="box">
+                <h2>XML Format</h2>
+                <pre id="xml-content"></pre>
+                <button id="download-xml">Download XML</button>
+            </div>
+            <div class="box">
+                <h2>YAML Format</h2>
+                <pre id="yaml-content"></pre>
+                <button id="download-yaml">Download YAML</button>
+            </div>
+            <div class="box">
+                <h2>CSV Format</h2>
+                <pre id="csv-content"></pre>
+                <button id="download-csv">Download CSV</button>
+            </div>
+            <button id="download-protobuf">Download ProtoBuf</button>
+            <button id="download-messagepack">Download MessagePack</button>
+        </div>
+    </div>
+    <script src="conversions/protobuf-converter.js"></script>
+    <script src="conversions/messagepack-converter.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
