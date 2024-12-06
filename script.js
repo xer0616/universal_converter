@@ -171,20 +171,18 @@ async function loadProtoSchema(schemaContent) {
 
 async function jsonToProtoBuf(json) {
     const schemaContent = generateProtoSchema(json);
-console.log('schema', schemaContent);
+    console.log('schema', schemaContent);
+
     return loadProtoSchema(schemaContent)
         .then(root => {
             // Get the Data message type from the schema
             const Data = root.lookupType("Data");
 
-console.log('Data', Data);
             // Create a new message
             const message = Data.create(json); // Assume json is compatible with the schema
-console.log('message', message);
             const buffer = Data.encode(message).finish(); // Encode the message to a buffer
 
-console.log('buffer', buffer);
-            resolve(buffer); // Return the buffer as ProtoBuf binary data
+            return buffer; // Return the buffer as ProtoBuf binary data
         })
         .catch(error => {
             console.error("Error loading ProtoBuf schema:", error);
