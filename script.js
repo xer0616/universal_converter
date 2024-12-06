@@ -166,7 +166,6 @@ console.log('buffer', buffer);
         .catch(error => {
             console.error("Error loading ProtoBuf schema:", error);
         });
-    });
 }
 
 async function jsonToMessagePack(json) {
