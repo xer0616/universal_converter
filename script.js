@@ -1,3 +1,4 @@
+import { protobufConverter } from './conversions/protobuf-converter.js';
 document.getElementById("file-input").addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (file) {
