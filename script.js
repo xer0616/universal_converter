@@ -161,6 +161,7 @@ async function loadProtoSchema(schemaContent) {
             // Check if the root contains the Data message
             const Data = root.lookupType("Data");
             if (!Data) {
+                console.error("ProtoBuf schema does not contain 'Data' message.");
                 reject("ProtoBuf schema does not contain 'Data' message.");
                 return;
             }
@@ -185,8 +186,10 @@ async function jsonToProtoBuf(json) {
 
             // Create a new message
             const message = Data.create(json); // Assume json is compatible with the schema
+console.log('Message ---',message);
             const buffer = Data.encode(message).finish(); // Encode the message to a buffer
 
+console.log('Buffer --- ',buffer);
             return buffer; // Return the buffer as ProtoBuf binary data
         })
         .catch(error => {
